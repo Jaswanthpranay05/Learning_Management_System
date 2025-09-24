@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import admin from 'firebase-admin';
 import 'dotenv/config';
+import coursesRouter from './routes/courses.js';
 
 const app = express();
 
