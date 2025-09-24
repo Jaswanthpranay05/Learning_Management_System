@@ -1,6 +1,7 @@
-const express = require("express");
+import express from "express";
+import Course from "../models/course.js"; // note the .js extension
+
 const router = express.Router();
-const Course = require("../models/course");
 
 // GET all courses
 router.get("/", async (req, res) => {
@@ -24,4 +25,4 @@ router.post("/", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router; // ES Modules export
