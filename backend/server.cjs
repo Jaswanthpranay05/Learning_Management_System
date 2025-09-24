@@ -1,8 +1,8 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const coursesRouter = require("./routes/courses");
-require("dotenv").config();
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import admin from 'firebase-admin';
+import 'dotenv/config';
 
 const app = express();
 
@@ -19,3 +19,4 @@ app.use("/api/courses", coursesRouter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
