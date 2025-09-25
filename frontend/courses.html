@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses - EduPlatform</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="https://images.pexels.com/photos/267507/pexels-photo-267507.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop" alt="EduPlatform Logo" class="logo">
+                <span class="logo-text">EduPlatform</span>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="courses.html" class="nav-link active">Courses</a>
+                <a href="login.html" class="nav-link">Login</a>
+                <a href="signup.html" class="nav-link">Sign Up</a>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="page-header">
+            <div class="container">
+                <h1>Available Courses</h1>
+                <p>Discover our comprehensive collection of courses designed to help you master new skills and advance your career.</p>
+            </div>
+        </section>
+
+        <section class="courses-section">
+            <div class="container">
+                <div class="courses-filter">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-category="all">All Courses</button>
+                        <button class="filter-btn" data-category="programming">Programming</button>
+                        <button class="filter-btn" data-category="design">Design</button>
+                        <button class="filter-btn" data-category="business">Business</button>
+                        <button class="filter-btn" data-category="marketing">Marketing</button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="Search courses...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+
+                <div id="loading" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading courses...</p>
+                </div>
+
+                <div id="courses-container" class="courses-grid">
+                    <!-- Courses will be dynamically loaded here -->
+                </div>
+
+                <div id="no-courses" class="no-courses" style="display: none;">
+                    <i class="fas fa-search"></i>
+                    <h3>No courses found</h3>
+                    <p>Try adjusting your search or filter criteria.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="https://images.pexels.com/photos/267507/pexels-photo-267507.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop" alt="EduPlatform Logo" class="logo">
+                        <span class="logo-text">EduPlatform</span>
+                    </div>
+                    <p>Transforming lives through accessible, high-quality online education.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <a href="index.html">Home</a>
+                    <a href="courses.html">Courses</a>
+                    <a href="login.html">Login</a>
+                    <a href="signup.html">Sign Up</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: info@eduplatform.com</p>
+                    <p>Phone: (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 EduPlatform. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script>
+        const coursesContainer = document.getElementById("courses-container");
+        const loading = document.getElementById("loading");
+        const noCourses = document.getElementById("no-courses");
+        const searchInput = document.getElementById("search-input");
+        const filterButtons = document.querySelectorAll(".filter-btn");
+
+        let allCourses = []; // store fetched courses
+        let filteredCourses = [];
+
+        // Load courses from backend
+        async function loadCourses() {
+            try {
+                const courses = await getCourses(); // from api.js
+                allCourses = courses;
+                filteredCourses = courses;
+                renderCourses(courses);
+            } catch (err) {
+                console.error(err);
+                coursesContainer.innerHTML = "<p>Error loading courses</p>";
+            } finally {
+                loading.style.display = "none";
+            }
+        }
+
+        // Render courses in DOM
+        function renderCourses(courses) {
+            if (courses.length === 0) {
+                noCourses.style.display = "block";
+                coursesContainer.innerHTML = "";
+            } else {
+                noCourses.style.display = "none";
+                coursesContainer.innerHTML = courses.map(c => `
+                    <div class="course-card">
+                        <img src="${c.thumbnailUrl || 'https://via.placeholder.com/300x180'}" alt="${c.title}" />
+                        <h2>${c.title}</h2>
+                        <p>${c.description}</p>
+                        <small>${c.author || 'Unknown'} | ${c.category || 'General'}</small>
+                    </div>
+                `).join("");
+            }
+        }
+
+        // Setup category filters
+        function setupCourseFilters() {
+            filterButtons.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    filterButtons.forEach(b => b.classList.remove("active"));
+                    btn.classList.add("active");
+                    const category = btn.dataset.category;
+                    filteredCourses = category === "all" ? allCourses : allCourses.filter(c => c.category.toLowerCase() === category);
+                    renderCourses(filteredCourses);
+                });
+            });
+        }
+
+        // Setup search
+        function setupCourseSearch() {
+            searchInput.addEventListener("input", () => {
+                const query = searchInput.value.toLowerCase();
+                const searchedCourses = filteredCourses.filter(c =>
+                    c.title.toLowerCase().includes(query) || c.description.toLowerCase().includes(query)
+                );
+                renderCourses(searchedCourses);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadCourses();
+            setupCourseFilters();
+            setupCourseSearch();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - EduPlatform</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar admin-navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <img src="https://images.pexels.com/photos/267507/pexels-photo-267507.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop" alt="EduPlatform Logo" class="logo">
+        <span class="logo-text">EduPlatform Admin</span>
+      </div>
+      <div class="admin-nav-menu">
+        <span class="admin-welcome">Welcome, <span id="admin-name">Admin</span></span>
+        <button class="btn btn-outline" onclick="adminLogout()">
+          <i class="fas fa-sign-out-alt"></i>
+          Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="admin-main">
+    <div class="container">
+      <div class="admin-header">
+        <h1><i class="fas fa-tachometer-alt"></i> Course Management Dashboard</h1>
+        <button class="btn btn-primary" onclick="showAddCourseModal()">
+          <i class="fas fa-plus"></i>
+          Add New Course
+        </button>
+      </div>
+
+      <div class="admin-content">
+        <div id="admin-courses-container" class="admin-courses-grid"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Course Modal -->
+  <div id="course-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">Add New Course</h2>
+        <button class="modal-close" onclick="closeCourseModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="course-form" class="modal-form">
+        <input type="text" id="course-title" placeholder="Course Title" required>
+        <input type="text" id="course-instructor" placeholder="Instructor" required>
+        <textarea id="course-description" placeholder="Description" required></textarea>
+        <input type="text" id="course-category" placeholder="Category" required>
+        <input type="text" id="course-level" placeholder="Level" required>
+        <input type="number" id="course-price" placeholder="Price" required>
+        <input type="text" id="course-duration" placeholder="Duration" required>
+        <input type="url" id="course-image" placeholder="Image URL" required>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Protect page
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!token || user.role !== "admin") {
+      window.location.href = "admin-login.html";
+    }
+
+    document.getElementById("admin-name").innerText = user.name || "Admin";
+
+    async function loadCourses() {
+      const container = document.getElementById("admin-courses-container");
+      container.innerHTML = "<p>Loading...</p>";
+      try {
+        const res = await fetch(`${API_URL}/courses`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        container.innerHTML = "";
+        data.forEach(c => {
+          const div = document.createElement("div");
+          div.className = "course-card";
+          div.innerHTML = `
+            <img src="${c.image}" alt="${c.title}">
+            <h3>${c.title}</h3>
+            <p>${c.instructor}</p>
+            <button onclick="deleteCourse('${c._id}')">Delete</button>
+          `;
+          container.appendChild(div);
+        });
+      } catch (err) {
+        container.innerHTML = `<p style="color:red">${err.message}</p>`;
+      }
+    }
+
+    document.getElementById("course-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const course = {
+        title: document.getElementById("course-title").value,
+        instructor: document.getElementById("course-instructor").value,
+        description: document.getElementById("course-description").value,
+        category: document.getElementById("course-category").value,
+        level: document.getElementById("course-level").value,
+        price: document.getElementById("course-price").value,
+        duration: document.getElementById("course-duration").value,
+        image: document.getElementById("course-image").value,
+      };
+
+      try {
+        await fetch(`${API_URL}/admin/courses`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(course)
+        });
+        closeCourseModal();
+        loadCourses();
+      } catch (err) {
+        alert("Error saving course: " + err.message);
+      }
+    });
+
+    async function deleteCourse(id) {
+      if (!confirm("Are you sure you want to delete this course?")) return;
+      try {
+        await fetch(`${API_URL}/admin/courses/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        loadCourses();
+      } catch (err) {
+        alert("Error deleting course: " + err.message);
+      }
+    }
+
+    function showAddCourseModal() {
+      document.getElementById("course-modal").style.display = "block";
+    }
+    function closeCourseModal() {
+      document.getElementById("course-modal").style.display = "none";
+    }
+    function adminLogout() {
+      localStorage.clear();
+      window.location.href = "admin-login.html";
+    }
+
+    // Load courses on page load
+    loadCourses();
+  </script>
+</body>
+</html>
